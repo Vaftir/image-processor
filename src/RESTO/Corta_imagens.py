@@ -67,8 +67,6 @@ class ImageProcessor:
             mask = np.zeros(img_cv2.shape[:2], np.uint8)
             
 
-            
-            
             # Seu código aqui
 
         
@@ -99,11 +97,7 @@ class ImageProcessor:
             img_final = img_cv2 * mask_final[:, :, np.newaxis]
             
 
-           
-           # ...
 
-
-            
             for x in range(0, img_cv2.shape[0]):
                 for y in range(0, img_cv2.shape[1]):
                     if(mask_final[x,y] == 0):

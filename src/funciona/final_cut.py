@@ -32,6 +32,12 @@ class ImageProcessor:
         button_apply_grabcut = ttk.Button(self.root, text="Apply GrabCut", command=self.apply_grabcut)
         button_apply_grabcut.grid(row=1, column=3, pady=(10, 10))
 
+        button_save_removed_bg = ttk.Button(self.root, text="Salvar Sem Fundo", command=self.save_removed_background)
+        button_save_removed_bg.grid(row=2, column=0, pady=(10, 10))
+
+        button_save_grabcut = ttk.Button(self.root, text="Salvar GrabCut", command=self.save_grabcut_result)
+        button_save_grabcut.grid(row=2, column=3, pady=(10, 10))
+
         # Adiciona eventos de mouse para a seleção do retângulo
         self.canvas.bind("<ButtonPress-1>", self.on_rect_start)
         self.canvas.bind("<B1-Motion>", self.on_rect_drag)
@@ -63,18 +69,14 @@ class ImageProcessor:
             processed_img = remove(self.original_img)
             self.processed_img = processed_img
             self.display_output_image(processed_img)
-            #self.display_image(processed_img, self.canvas)
 
     def apply_grabcut(self):
- 
+        if self.original_img:
             print("Applying GrabCut")
-            # Converte a imagem original para formato OpenCV
             img_cv2 = np.array(self.original_img)
-            img_cv2 = cv2.cvtColor(np.array(self.original_img), cv2.COLOR_RGBA2BGR)  # Converte RGBA para BGR
+            img_cv2 = cv2.cvtColor(np.array(self.original_img), cv2.COLOR_RGBA2BGR)  
 
-            # Aplica o GrabCut na imagem original
             mask = np.zeros(img_cv2.shape[:2], np.uint8)
-
             rect = (
                 int(self.rect_start_x),
                 int(self.rect_start_y),
@@ -84,15 +86,13 @@ class ImageProcessor:
 
             modeloFundo = np.zeros((1, 65), np.float64)
             modeloObjeto = np.zeros((1, 65), np.float64)
-
+            
             # Invoca o GrabCut
             #o 5 é o numero de iterações quanto maior as iterações mais chances tem de melhorar
             #o GC_INIT_WITH_RECT é o modo de inicialização do grabcut, nesse caso é com um retangulo
             cv2.grabCut(img_cv2, mask, rect, modeloFundo, modeloObjeto, 5, cv2.GC_INIT_WITH_RECT)
-
-          
-        
-            #valor 0 -> posição é fundo
+            
+             #valor 0 -> posição é fundo
             #valor 1 -> pregião faz parte do objeto final
             #valor 2 -> região é provavelmente fundo
             #valor 3 -> região é provavelmente objeto
@@ -101,26 +101,37 @@ class ImageProcessor:
             # np.where -> troca os valores -> se a posição da máscara for 2 ou 0, então o valor é 0, se não é 1 
             # converte pra inteiro de 8 bits
             mask_final = np.where((mask == 2) | (mask == 0), 0, 1).astype("uint8")
-
-            # Aplica a máscara à imagem original
             img_final = img_cv2 * mask_final[:, :, np.newaxis]
 
+             # Aplica a máscara à imagem original
             for x in range(0, img_cv2.shape[0]):
                 for y in range(0, img_cv2.shape[1]):
                     if mask_final[x, y] == 0:
                         img_final[x][y][0] = img_final[x][y][1] = img_final[x][y][2] = 255
 
-            # Converte a imagem final para o formato RGB
             img_final = cv2.cvtColor(img_final, cv2.COLOR_BGR2RGB)
+            self.img_final_pil = Image.fromarray(img_final)
+            
+            #remove o fundo da imagem preenchido por pixels brancos
+            self.img_final_pil = remove(self.img_final_pil)
+            
+            #converte a imagem pill para png e salva
+            self.img_final_pil.save('grabcut.png')
 
-            # Converte a imagem final para o formato PIL
-            img_final_pil = Image.fromarray(img_final)
+            self.display_output_image(self.img_final_pil)
 
-            # Exibe a imagem final na tela
-            self.display_output_image(img_final_pil)
+    def save_removed_background(self):
+        if self.processed_img:
+            file_path = filedialog.asksaveasfilename(defaultextension=".png", filetypes=[("PNG files", "*.png")])
+            if file_path:
+                self.processed_img.save(file_path)
 
-            # Atualiza o canvas principal
-            #self.display_image(img_final_pil, self.canvas)
+    def save_grabcut_result(self):
+        if self.original_img:
+            #converte a imagem pill para png e salva
+            file_path = filedialog.asksaveasfilename(defaultextension=".png", filetypes=[("PNG files", "*.png")])
+            if file_path:
+                self.img_final_pil.save(file_path)
 
     def display_image(self, img, target):
         img.thumbnail((300, 300))
@@ -136,22 +147,18 @@ class ImageProcessor:
         self.output_label.image = img_tk
 
     def on_rect_start(self, event):
-        # Inicia as coordenadas do retângulo
         self.rect_start_x = event.x
         self.rect_start_y = event.y
 
     def on_rect_drag(self, event):
-        # Atualiza as coordenadas do retângulo enquanto arrasta o mouse
         self.rect_end_x = event.x
         self.rect_end_y = event.y
-        # Redesenha o retângulo
         self.canvas.delete("rect")
         self.canvas.create_rectangle(
             self.rect_start_x, self.rect_start_y, self.rect_end_x, self.rect_end_y, outline="blue", tags="rect"
         )
 
     def on_rect_end(self, event):
-        # Faz algo quando o botão do mouse é liberado após arrastar o retângulo
         pass
 
 def main():
