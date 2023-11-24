@@ -1,9 +1,9 @@
 import tkinter as tk
 from tkinter import ttk, filedialog
 from PIL import Image, ImageTk
-import cv2
+import cv2 #Biblioteca de visão computacional 
 import numpy as np
-from rembg import remove
+from rembg import remove ## biblioteca aom IA
 
 class ImageProcessor:
     def __init__(self, root, canvas, output_label):
@@ -53,7 +53,7 @@ class ImageProcessor:
             self.original_img = image
             self.display_image(image, self.canvas)
 
-    def reset(self):
+    def reset(self): ## ao carregar imagem resetar todos os valores
         # Limpa os dados existentes
         self.original_img = None
         self.processed_img = None
@@ -64,7 +64,7 @@ class ImageProcessor:
         self.rect_end_y = None
         self.canvas.delete("rect")  # Limpa o retângulo no canvas
 
-    def remove_background(self):
+    def remove_background(self): ## remove o fundo da imagem usando rembg
         if self.original_img:
             processed_img = remove(self.original_img)
             self.processed_img = processed_img
@@ -92,7 +92,7 @@ class ImageProcessor:
             #o GC_INIT_WITH_RECT é o modo de inicialização do grabcut, nesse caso é com um retangulo
             cv2.grabCut(img_cv2, mask, rect, modeloFundo, modeloObjeto, 5, cv2.GC_INIT_WITH_RECT)
             
-             #valor 0 -> posição é fundo
+            #valor 0 -> posição é fundo
             #valor 1 -> pregião faz parte do objeto final
             #valor 2 -> região é provavelmente fundo
             #valor 3 -> região é provavelmente objeto
@@ -103,7 +103,7 @@ class ImageProcessor:
             mask_final = np.where((mask == 2) | (mask == 0), 0, 1).astype("uint8")
             img_final = img_cv2 * mask_final[:, :, np.newaxis]
 
-             # Aplica a máscara à imagem original
+            # Aplica a máscara à imagem original
             for x in range(0, img_cv2.shape[0]):
                 for y in range(0, img_cv2.shape[1]):
                     if mask_final[x, y] == 0:
@@ -120,37 +120,37 @@ class ImageProcessor:
 
             self.display_output_image(self.img_final_pil)
 
-    def save_removed_background(self):
+    def save_removed_background(self): # salva a imagem sem fundo pela IA
         if self.processed_img:
             file_path = filedialog.asksaveasfilename(defaultextension=".png", filetypes=[("PNG files", "*.png")])
             if file_path:
                 self.processed_img.save(file_path)
 
-    def save_grabcut_result(self):
+    def save_grabcut_result(self): # salva a imagem sem fundo pela segmentação
         if self.original_img:
             #converte a imagem pill para png e salva
             file_path = filedialog.asksaveasfilename(defaultextension=".png", filetypes=[("PNG files", "*.png")])
             if file_path:
                 self.img_final_pil.save(file_path)
 
-    def display_image(self, img, target):
+    def display_image(self, img, target): # exibe a imagem no canvas
         img.thumbnail((300, 300))
         img_tk = ImageTk.PhotoImage(img)
         target.configure(width=300, height=300)
         target.create_image(0, 0, anchor="nw", image=img_tk)
         target.image = img_tk
 
-    def display_output_image(self, img):
+    def display_output_image(self, img): # exibe a imagem no label
         img.thumbnail((300, 300))
         img_tk = ImageTk.PhotoImage(img)
         self.output_label.configure(image=img_tk)
         self.output_label.image = img_tk
 
-    def on_rect_start(self, event):
+    def on_rect_start(self, event): # evento de click do mouse
         self.rect_start_x = event.x
         self.rect_start_y = event.y
 
-    def on_rect_drag(self, event):
+    def on_rect_drag(self, event): # evento de arrastar o mouse
         self.rect_end_x = event.x
         self.rect_end_y = event.y
         self.canvas.delete("rect")
@@ -158,29 +158,29 @@ class ImageProcessor:
             self.rect_start_x, self.rect_start_y, self.rect_end_x, self.rect_end_y, outline="blue", tags="rect"
         )
 
-    def on_rect_end(self, event):
+    def on_rect_end(self, event): # evento de soltar o mouse
         pass
 
 def main():
-    window = tk.Tk()
-    window.title("Image Processor")
+    window = tk.Tk() # cria a janela
+    window.title("Image Processor") # titulo da janela
 
     style = ttk.Style()
-    style.configure("TButton", padding=(10, 5), font=("Helvetica", 12), background="#4CAF50", foreground="black")
-    style.configure("TLabel", font=("Helvetica", 12), background="#f0f0f0", padding=(10, 5), anchor="w")
-    style.configure("TEntry", font=("Helvetica", 12), padding=(10, 5))
-    style.configure("TFrame", background="#f0f0f0")
-    style.configure("TCheckbutton", background="#f0f0f0")
+    style.configure("TButton", padding=(10, 5), font=("Helvetica", 12), background="#4CAF50", foreground="black") #estilo do botão
+    style.configure("TLabel", font=("Helvetica", 12), background="#f0f0f0", padding=(10, 5), anchor="w") #estilo do label
+    style.configure("TEntry", font=("Helvetica", 12), padding=(10, 5)) #estilo da entrada de texto
+    style.configure("TFrame", background="#f0f0f0") #estilo do frame
+    style.configure("TCheckbutton", background="#f0f0f0") #estilo do checkbutton
 
-    frame = ttk.Frame(window)
-    frame.grid(row=0, column=0, padx=20, pady=20)
+    frame = ttk.Frame(window) #cria o frame
+    frame.grid(row=0, column=0, padx=20, pady=20) #posiciona o frame
 
-    canvas = tk.Canvas(frame, relief="solid", borderwidth=1, width=400, height=300)
-    output_label = ttk.Label(frame, style="TLabel", relief="solid", borderwidth=1)
+    canvas = tk.Canvas(frame, relief="solid", borderwidth=1, width=400, height=300) #cria o canvas
+    output_label = ttk.Label(frame, style="TLabel", relief="solid", borderwidth=1) #cria o label
 
-    image_processor = ImageProcessor(window, canvas, output_label)
+    image_processor = ImageProcessor(window, canvas, output_label) #cria o objeto da classe ImageProcessor
 
-    window.mainloop()
+    window.mainloop() #loop da janela
 
 if __name__ == "__main__":
     main()
