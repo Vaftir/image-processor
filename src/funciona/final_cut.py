@@ -29,13 +29,13 @@ class ImageProcessor:
         button_remove_bg = ttk.Button(self.root, text="Remover com IA", command=self.remove_background)
         button_remove_bg.grid(row=1, column=2, pady=(10, 10))
 
-        button_apply_grabcut = ttk.Button(self.root, text="Apply GrabCut", command=self.apply_grabcut)
+        button_apply_grabcut = ttk.Button(self.root, text="Segmentação", command=self.apply_grabcut)
         button_apply_grabcut.grid(row=1, column=3, pady=(10, 10))
 
-        button_save_removed_bg = ttk.Button(self.root, text="Salvar Sem Fundo", command=self.save_removed_background)
+        button_save_removed_bg = ttk.Button(self.root, text="Salvar IA", command=self.save_removed_background)
         button_save_removed_bg.grid(row=2, column=0, pady=(10, 10))
 
-        button_save_grabcut = ttk.Button(self.root, text="Salvar GrabCut", command=self.save_grabcut_result)
+        button_save_grabcut = ttk.Button(self.root, text="Salvar Segmentação", command=self.save_grabcut_result)
         button_save_grabcut.grid(row=2, column=3, pady=(10, 10))
 
         # Adiciona eventos de mouse para a seleção do retângulo
